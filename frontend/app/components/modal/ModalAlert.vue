@@ -3,7 +3,11 @@
   <ModalBase :modalName="modalName">
     <div class="flex flex-col gap-3">
       <div class="flex items-center gap-2">
-        <Icon :name="IconMap.WARN_OCTAGON" size="1.4em" />
+        <Icon
+          class="text-action-red"
+          :name="IconMap.WARN_OCTAGON"
+          size="1.4em"
+        />
         <p>{{ $t(message) }}</p>
       </div>
       <div class="flex gap-2">
@@ -37,8 +41,8 @@ const props = defineProps<{
 const modalName = props.name ?? "ModalAlert";
 const { handleCloseModal } = useModalHandlers(modalName);
 
-const onConfirm = () => {
-  props.onConfirmation?.();
+const onConfirm = async () => {
+  await props.onConfirmation?.();
   handleCloseModal();
 };
 </script>

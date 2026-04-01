@@ -93,9 +93,10 @@ describe("services/communities/organization", () => {
     const [, opts] = getFetchCall(fetchMock);
     expect(opts.headers?.Authorization).toBeUndefined();
 
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("org-2");
-    expect(result[0].texts).toEqual([]);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].id).toBe("org-2");
+    expect(result.data[0].texts).toEqual([]);
+    expect(result.isLastPage).toBe(true);
   });
 
   // MARK: Create
@@ -104,9 +105,9 @@ describe("services/communities/organization", () => {
     const { fetchMock } = getMocks();
     const form = {
       name: "New Org",
-      location: "Earth",
+      country_code: "US",
+      city: "City",
       tagline: "Join",
-      social_accounts: ["x"],
       description: "desc",
       topics: [],
     } as const;
@@ -114,22 +115,18 @@ describe("services/communities/organization", () => {
     const created = { id: "org-3" };
     fetchMock.mockResolvedValueOnce(created);
 
-    const id = await createOrganization({ ...form } as unknown as Parameters<
+    const org = await createOrganization({ ...form } as unknown as Parameters<
       typeof createOrganization
     >[0]);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expectJsonRequest(fetchMock, "/communities/organizations", "POST", {
       name: form.name,
-      location: form.location,
       tagline: form.tagline,
-      social_accounts: form.social_accounts,
       description: form.description,
       topics: form.topics,
-      high_risk: false,
-      total_flags: 0,
     });
-    expect(id).toBe("org-3");
+    expect(org.id).toBe("org-3");
   });
 
   // MARK: Delete

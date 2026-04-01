@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Mutation composable for FAQ entries - uses direct service calls, not useAsyncData.
 
+import { getKeyForGetOrganization } from "../queries/useGetOrganization";
+
 export function useOrganizationResourcesMutations(
   organizationId: MaybeRef<string>
 ) {
@@ -32,7 +34,9 @@ export function useOrganizationResourcesMutations(
 
       return true;
     } catch (err) {
-      showToastError((err as AppError).message);
+      const appError = err as AppError;
+      error.value = appError;
+      showToastError(appError.message);
       return false;
     } finally {
       loading.value = false;
@@ -53,7 +57,31 @@ export function useOrganizationResourcesMutations(
 
       return true;
     } catch (err) {
-      showToastError((err as AppError).message);
+      const appError = errorHandler(err);
+      error.value = appError;
+      showToastError(appError.message);
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  // Delete existing resource.
+  async function deleteResource(resourceId: string) {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      await deleteOrganizationResource(resourceId);
+
+      // Invalidate cache and refetch fresh data.
+      await refreshOrganizationData();
+
+      return true;
+    } catch (err) {
+      const appError = errorHandler(err);
+      error.value = appError;
+      showToastError(appError.message);
       return false;
     } finally {
       loading.value = false;
@@ -76,7 +104,9 @@ export function useOrganizationResourcesMutations(
 
       return true;
     } catch (err) {
-      showToastError((err as AppError).message);
+      const appError = errorHandler(err);
+      error.value = appError;
+      showToastError(appError.message);
       return false;
     } finally {
       loading.value = false;
@@ -99,6 +129,7 @@ export function useOrganizationResourcesMutations(
     error: readonly(error),
     createResource,
     updateResource,
+    deleteResource,
     reorderResources,
     refreshOrganizationData,
   };

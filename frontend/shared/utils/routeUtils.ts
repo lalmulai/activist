@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { LocationQueryValue } from "vue-router";
+
 import locales from "#shared/utils/locales";
 
 const localCodes = locales.map((l) => l.code);
@@ -71,4 +73,49 @@ export function currentRoutePathIncludes(
 ): boolean {
   const baseName = removeLocaleFromRouteName(routeName);
   return baseName.includes(path);
+}
+
+/**
+ * Normalizes Vue Router query parameter to always be an array.
+ * Vue Router returns string for single value, array for multiple.
+ * LocationQueryValue can be string | null, so we need to handle null.
+ *
+ * @param arr - Query parameter value (LocationQueryValue | LocationQueryValue[] | undefined)
+ * @returns Array of strings, or empty array if undefined/null
+ */
+export function normalizeArrayFromURLQuery(
+  arr: LocationQueryValue | LocationQueryValue[] | undefined
+): string[] {
+  if (!arr || arr === null) return [];
+  if (Array.isArray(arr)) {
+    // Filter out null values from array.
+    return arr.filter((t): t is string => t !== null && typeof t === "string");
+  }
+  if (typeof arr === "string") return [arr];
+  return [];
+}
+
+/**
+ * Converts route query to events filter form data.
+ * Extracts view separately; normalizes topics to array.
+ */
+export function routeQueryToEventsFilterFormData(
+  query: Record<string, unknown> | undefined
+): Record<string, unknown> {
+  const q = query || {};
+  const { view, ...rest } = q;
+  const topics = normalizeArrayFromURLQuery(
+    q.topics as LocationQueryValue | LocationQueryValue[] | undefined
+  );
+  return { ...rest, topics };
+}
+
+/**
+ * Converts route query to organization filter form data.
+ * Spreads query as-is.
+ */
+export function routeQueryToOrganizationFilterFormData(
+  query: Record<string, unknown> | undefined
+): Record<string, unknown> {
+  return { ...(query || {}) };
 }
